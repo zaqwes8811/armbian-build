@@ -236,9 +236,7 @@ EOF
     dpkg-deb -b "hailo8-package" "${DEB_STORAGE}/hailo8-all_arm64.deb"
     
     display_alert "Hailo-8 package created" "${DEB_STORAGE}/hailo8-all_arm64.deb" "info"
-}
 
-function post_install_kernel_debs__install_hailo8_package() {
     display_alert "Installing Hailo-8 package" "hailo8" "info"
 
     # wget https://hailo-hailort.s3.eu-west-2.amazonaws.com/arm64/debian12/hailort_4.23.0_arm64.deb
@@ -374,7 +372,7 @@ function post_install_kernel_debs__build_hailo_python_bindings() {
         
         # Install dependencies
         apt-get update
-        apt-get install -y cmake build-essential python3-dev python3-pip python3-pybind11 python3-numpy
+        apt-get install -y git python3-dev python3-pip python3-pybind11 python3-numpy cmake build-essential
         
         # Build and install Python bindings
         cd /tmp/hailo-src/hailort/libhailort/bindings/python/platform
@@ -382,8 +380,8 @@ function post_install_kernel_debs__build_hailo_python_bindings() {
         python3 setup.py install
         
         # Verify installation
-        python3 -c "import hailo_platform; print('Python bindings installed successfully')"
-        
+        /opt/hailo-libs/ld-linux-aarch64.so.1 --library-path /opt/hailo-libs /usr/bin/python3 -c "import hailo_platform; print('Success!')"
+
         # Clean up
         cd / && rm -rf /tmp/hailo-src /tmp/src
 CHROOT
