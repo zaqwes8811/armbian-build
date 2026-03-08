@@ -68,18 +68,12 @@ function extension_prepare_config__hailo8_001() {
     fi
 }
 
-# function pre_install_kernel_debs__check_glibc() {
-#     display_alert "Checking glibc version" "station-p2" "info"
-    
-#     # Check glibc version in build container
-#     GLIBC_VERSION=$(ldd --version | head -1 | grep -oP '\d+\.\d+')
-#     display_alert "Build glibc: $GLIBC_VERSION" "Target needs 2.36" "info"
-    
-#     if [[ "$GLIBC_VERSION" > "2.36" ]]; then
-#         display_alert "⚠️  WARNING: glibc $GLIBC_VERSION is newer than target (2.36)" "" "wrn"
-#         display_alert "Binaries may not run on Station P2" "" "wrn"
-#     fi
-# }
+# In your extension, add these to the build environment
+function pre_install_kernel_debs__hailo_python_deps() {
+    display_alert "Hailo8: Installing Python bindings dependencies" "station-p2" "info"
+
+    HOSTPACKAGES="$HOSTPACKAGES python3-dev python3-pip python3-venv python3-numpy python3-pybind11"
+}
 
 function post_install_kernel_debs__build_hailo8_driver_cross() {
     display_alert "Hailo8 cross compilation" ${LOG_NAME} "info"
@@ -358,4 +352,41 @@ EOF
     echo "alias hailortcli='/usr/local/bin/hailo-run'" >> "${SDCARD}/root/.bashrc"
     
     display_alert "Hailo runner created" "Use 'hailo-run' or 'hailortcli' (after login)" "ok"
+}
+
+function post_install_kernel_debs__build_hailo_python_bindings() {
+    display_alert "Hailo8: Building Python bindings from source" "station-p2" "info"
+    
+    local hailo_src_dir="${SRC}/cache/sources/hailort"
+    local python_bindings_dir="${hailo_src_dir}/hailort/libhailort/bindings/python/platform"
+    
+    if [[ ! -d "${python_bindings_dir}" ]]; then
+        display_alert "Python bindings directory not found" "hailo8" "err"
+        return 1
+    fi
+    
+    # Copy entire source to image (needed for the build)
+    cp -r "${hailo_src_dir}" "${SDCARD}/tmp/hailo-src"
+    
+    chroot "${SDCARD}" /bin/bash << 'CHROOT'
+        # Create symlink to satisfy the build script
+        ln -sf /tmp/hailo-src /tmp/src
+        
+        # Install dependencies
+        apt-get update
+        apt-get install -y python3-dev python3-pip python3-pybind11 python3-numpy
+        
+        # Build and install Python bindings
+        cd /tmp/hailo-src/hailort/libhailort/bindings/python/platform
+        python3 setup.py build_ext --inplace
+        python3 setup.py install
+        
+        # Verify installation
+        python3 -c "import hailo_platform; print('Python bindings installed successfully')"
+        
+        # Clean up
+        cd / && rm -rf /tmp/hailo-src /tmp/src
+CHROOT
+    
+    display_alert "Hailo8 Python bindings installed" "station-p2" "ok"
 }
