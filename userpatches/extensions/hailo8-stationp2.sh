@@ -374,7 +374,7 @@ function post_install_kernel_debs__build_hailo_python_bindings() {
         
         # Install dependencies
         apt-get update
-        apt-get install -y python3-dev python3-pip python3-pybind11 python3-numpy
+        apt-get install -y cmake build-essential python3-dev python3-pip python3-pybind11 python3-numpy
         
         # Build and install Python bindings
         cd /tmp/hailo-src/hailort/libhailort/bindings/python/platform
