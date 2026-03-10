@@ -372,7 +372,8 @@ function post_install_kernel_debs__build_hailo_python_bindings() {
         
         # Install dependencies
         apt-get update
-        apt-get install -y git python3-dev python3-pip python3-pybind11 python3-numpy cmake build-essential
+        apt-get install -y git python3-dev python3-pip python3-pybind11 \
+            python3-numpy cmake build-essential python3-opencv
         
         # Build and install Python bindings
         cd /tmp/hailo-src/hailort/libhailort/bindings/python/platform
@@ -381,6 +382,9 @@ function post_install_kernel_debs__build_hailo_python_bindings() {
         
         # Verify installation
         /opt/hailo-libs/ld-linux-aarch64.so.1 --library-path /opt/hailo-libs /usr/bin/python3 -c "import hailo_platform; print('Success!')"
+
+        # For next
+        /opt/hailo-libs/ld-linux-aarch64.so.1 --library-path /opt/hailo-libs /usr/bin/python3 -m venv /root/hailo-env
 
         # Clean up
         cd / && rm -rf /tmp/hailo-src /tmp/src
