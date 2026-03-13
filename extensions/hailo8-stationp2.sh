@@ -1,6 +1,7 @@
 #!/bin/bash
 
 LOG_NAME="station-p2"
+#VER
 
 function post_install_kernel_debs__hailo8_initramfs() {
     display_alert "Hailo8: Adding firmware to initramfs" "station-p2" "info"
